@@ -1,0 +1,18 @@
+.awssld,
+.awssld__wrapper,
+.awssld__container,
+.awssld__content,
+.awssld__box {
+  height: 100% !important;
+}
+
+.awssld__bullets {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  position: absolute;
+  bottom: 10px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 10;
+}
