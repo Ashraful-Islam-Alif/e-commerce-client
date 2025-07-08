@@ -1,43 +1,37 @@
-import vega from "./VegaCrux.jpg";
-import Steelbird from "./Steelbird.jpg";
-import AxorApex from "./AxorApex.webp";
-import HJC from "./HJC.jpeg";
-import { useNavigate, useOutletContext } from "react-router-dom";
-const helmets = [
-  {
-    id: 1,
-    name: "Vega Crux",
-    price: 2500,
-    image: vega,
-  },
-  {
-    id: 2,
-    name: "Steelbird",
-    price: 3200,
-    image: Steelbird,
-  },
-  {
-    id: 3,
-    name: "Axor Apex",
-    price: 4500,
-    image: AxorApex,
-  },
-  {
-    id: 4,
-    name: "HJC",
-    price: 4500,
-    image: HJC,
-  },
-];
+import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
+import useHelmet from "../../../hooks/useHelmet";
+import { useContext } from "react";
+import { AuthContext } from "../../../providers/AuthProvider";
+import Swal from "sweetalert2";
 const Helmets = () => {
   const navigate = useNavigate();
-
+  const [helmets] = useHelmet();
   const { addToCart } = useOutletContext();
+  const { user, loading } = useContext(AuthContext);
+  const location = useLocation();
+
   const handleBuyNow = (helmet) => {
-    // Add to cart with quantity 1
-    addToCart({ ...helmet, quantity: 1 });
-    // Navigate to view cart
-    navigate("/myItems");
+    if (user && user.email) {
+      // Add to cart
+      addToCart(helmet);
+      // Navigate to view cart
+      navigate("/myItems");
+    } else {
+      Swal.fire({
+        title: "You are not logged In",
+        text: "Please login to add to the cart!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, Login!",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          //send the user to the login page
+          navigate("/login", { state: { from: location } });
+        }
+      });
+    }
   };
   return (
     <div className="p-6 mt-8">

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import gearIcon from "./icon.png";
 import {
   FaShoppingCart,
@@ -9,12 +9,14 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { AuthContext } from "../../../../providers/AuthProvider";
+import Swal from "sweetalert2";
 
 const Navbar = ({ cartItems, updateQuantity }) => {
   const [showCart, setShowCart] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const cartRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { user, LogOut } = useContext(AuthContext);
 
@@ -31,13 +33,45 @@ const Navbar = ({ cartItems, updateQuantity }) => {
   };
 
   const handleCartClick = () => {
-    setShowMobileMenu(false);
-    navigate("/myItems");
+    if (user && user.email) {
+      setShowMobileMenu(false);
+      navigate("/myItems");
+    } else {
+      Swal.fire({
+        title: "You are not logged In",
+        text: "Please login to add to the cart!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, Login!",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate("/login", { state: { from: location } });
+        }
+      });
+    }
   };
 
   const toggleCart = () => {
-    setShowCart(!showCart);
-    if (!showCart) setShowMobileMenu(false);
+    if (user && user.email) {
+      setShowCart(!showCart);
+      if (!showCart) setShowMobileMenu(false);
+    } else {
+      Swal.fire({
+        title: "You are not logged In",
+        text: "Please login to add to the cart!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, Login!",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate("/login", { state: { from: location } });
+        }
+      });
+    }
   };
 
   useEffect(() => {
@@ -54,7 +88,7 @@ const Navbar = ({ cartItems, updateQuantity }) => {
   }, [cartRef]);
 
   const navOptions = [
-    { name: "Helmet", link: "#" },
+    { name: "Helmet", link: "/" },
     { name: "Tyre", link: "#" },
     { name: "Spare Parts", link: "#" },
     { name: "Engine Oil & Fluids", link: "#" },
@@ -172,26 +206,32 @@ const Navbar = ({ cartItems, updateQuantity }) => {
                                 {item.quantity}x ৳{item.price}
                               </p>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  updateQuantity(item.id, -1);
-                                }}
-                                className="p-1 rounded bg-gray-100 hover:bg-gray-200"
-                              >
-                                <FaMinus className="text-xs" />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  updateQuantity(item.id, 1);
-                                }}
-                                className="p-1 rounded bg-gray-100 hover:bg-gray-200"
-                              >
-                                <FaPlus className="text-xs" />
-                              </button>
-                            </div>
+                            {user && user.email ? (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateQuantity(item.id, -1);
+                                  }}
+                                  className="p-1 rounded bg-gray-100 hover:bg-gray-200"
+                                >
+                                  <FaMinus className="text-xs" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateQuantity(item.id, 1);
+                                  }}
+                                  className="p-1 rounded bg-gray-100 hover:bg-gray-200"
+                                >
+                                  <FaPlus className="text-xs" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="text-xs text-gray-500 italic">
+                                Login to modify
+                              </div>
+                            )}
                           </li>
                         ))}
                       </ul>
@@ -203,9 +243,20 @@ const Navbar = ({ cartItems, updateQuantity }) => {
                             0
                           )}
                         </p>
-                        <button className="w-full mt-2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors">
-                          Checkout
-                        </button>
+                        {user && user.email ? (
+                          <button className="w-full mt-2 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors">
+                            Checkout
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() =>
+                              navigate("/login", { state: { from: location } })
+                            }
+                            className="w-full mt-2 bg-gray-600 text-white py-2 rounded hover:bg-gray-700 transition-colors"
+                          >
+                            Login to Checkout
+                          </button>
+                        )}
                       </div>
                     </>
                   )}

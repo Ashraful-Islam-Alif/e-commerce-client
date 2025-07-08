@@ -18,11 +18,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/myItems",
-        element: (
-          <PrivateRoute>
-            <ViewItemsWrapper></ViewItemsWrapper>
-          </PrivateRoute>
-        ),
+        element: <ViewItemsWrapper></ViewItemsWrapper>,
       },
       {
         path: "/login",

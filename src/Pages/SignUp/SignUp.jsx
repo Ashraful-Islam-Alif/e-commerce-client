@@ -4,6 +4,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../providers/AuthProvider";
+import { Helmet } from "react-helmet-async";
 const SignUp = () => {
   const navigate = useNavigate();
   const {
@@ -40,6 +41,9 @@ const SignUp = () => {
 
   return (
     <div className="max-w-md mx-auto p-6 shadow-lg rounded-xl mt-10 bg-white">
+      <Helmet>
+        <title>Grips&Gears | SignUp</title>
+      </Helmet>
       <h2 className="text-2xl font-semibold mb-6 text-center">Sign Up</h2>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Name Field */}

@@ -3,6 +3,8 @@ import { FcGoogle } from "react-icons/fc";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { AuthContext } from "../../providers/AuthProvider";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import Swal from "sweetalert2";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -20,16 +22,41 @@ const Login = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!email || !password) {
-      alert("Please fill in all fields");
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Fields",
+        text: "Please fill in all fields.",
+      });
       return;
     }
-    // Handle login logic here
-    console.log("Logging in with:", { email, password });
-    signIn(email, password).then((result) => {
-      const user = result.user;
-      console.log(user);
-      navigate(from, { replace: true });
-    });
+
+    signIn(email, password)
+      .then((result) => {
+        const user = result.user;
+        console.log(user);
+        Swal.fire({
+          toast: true,
+          icon: "success",
+          title: "Login successful!",
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        });
+        navigate(from, { replace: true });
+      })
+      .catch((error) => {
+        console.error("Login error:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Login Failed",
+          text:
+            error.message === "Firebase: Error (auth/user-not-found)." ||
+            error.message === "Firebase: Error (auth/wrong-password)."
+              ? "Incorrect email or password."
+              : "Something went wrong. Please try again.",
+        });
+      });
   };
 
   const handleGoogleLogin = () => {
@@ -46,6 +73,9 @@ const Login = () => {
 
   return (
     <div className="max-w-md mx-auto p-6 shadow-lg rounded-xl mt-10 bg-white">
+      <Helmet>
+        <title>Grips&Gears | Login</title>
+      </Helmet>
       <h2 className="text-2xl font-semibold mb-6 text-center">Login</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
