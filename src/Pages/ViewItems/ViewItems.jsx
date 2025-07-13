@@ -1,21 +1,28 @@
 import { FaPlus, FaMinus, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import useCart from "../../hooks/useCart";
+import useAuth from "../../hooks/useAuth";
 
-const ViewItems = ({
-  cartItems = [],
-  updateQuantity = () => {},
-  deleteItem = () => {},
-}) => {
+const ViewItems = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [
+    cart,
+    refetch,
+    isLoading,
+    isError,
+    error,
+    increaseQty,
+    decreaseQty,
+    removeItem,
+  ] = useCart();
 
-  const subtotal = cartItems.reduce(
-    (acc, item) => acc + item.quantity * item.price,
+  const cartLength = cart.length;
+  const subtotal = cart.reduce(
+    (total, item) => total + item.price * (item.quantity || 1),
     0
   );
 
-  const handleCheckout = async () => {
-    navigate("/payment");
-  };
   return (
     <div className="p-6 flex flex-col lg:flex-row gap-6">
       {/* Cart Table */}
@@ -35,10 +42,11 @@ const ViewItems = ({
               </tr>
             </thead>
             <tbody>
-              {Array.isArray(cartItems) && cartItems.length > 0 ? (
-                cartItems.map((item, index) => (
-                  <tr key={item.id}>
+              {Array.isArray(cart) && cart.length > 0 ? (
+                cart.map((item, index) => (
+                  <tr key={item._id || item.id}>
                     <td>{index + 1}</td>
+
                     <td>
                       <img
                         src={item.image}
@@ -51,25 +59,28 @@ const ViewItems = ({
                     <td>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => updateQuantity(item.id, -1)}
                           className="btn btn-xs btn-outline"
+                          disabled={item.quantity <= 1}
+                          onClick={() => decreaseQty(item._id, item.quantity)}
                         >
                           <FaMinus />
                         </button>
-                        <span>{item.quantity}</span>
+                        <span className="min-w-[2rem] text-center">
+                          {item.quantity}
+                        </span>
                         <button
-                          onClick={() => updateQuantity(item.id, 1)}
                           className="btn btn-xs btn-outline"
+                          onClick={() => increaseQty(item._id, item.quantity)}
                         >
                           <FaPlus />
                         </button>
                       </div>
                     </td>
-                    <td>৳{item.quantity * item.price}</td>
+                    <td>৳{item.price * (item.quantity || 1)}</td>
                     <td>
                       <button
-                        onClick={() => deleteItem(item.id)}
                         className="btn btn-sm btn-error text-white"
+                        onClick={() => removeItem(item._id)}
                       >
                         <FaTrash />
                       </button>
@@ -87,18 +98,22 @@ const ViewItems = ({
           </table>
         </div>
       </div>
+
       {/* Order Summary */}
       <div className="w-full lg:w-1/3 bg-gray-100 p-6 rounded shadow">
         <h3 className="text-xl font-semibold mb-4">Order Summary</h3>
         <div className="flex justify-between mb-2">
           <span>
-            Subtotal ({cartItems.length} item{cartItems.length !== 1 && "s"})
+            Subtotal ({cart.length} item
+            {cartLength !== 1 && "s"})
           </span>
           <span>৳{subtotal}</span>
         </div>
-        <div className="flex justify-between mb-4">
+        <div className="flex justify-between items-center mb-4">
           <span>Shipping Fee</span>
-          <span>৳0</span>
+          <button className="btn btn-active btn-xs btn-success text-white px-1">
+            Free
+          </button>
         </div>
         <input
           type="text"
@@ -111,12 +126,24 @@ const ViewItems = ({
           <span>৳{subtotal}</span>
         </div>
         <button
-          onClick={handleCheckout}
-          disabled={cartItems.length === 0}
-          className="btn btn-success w-full"
+          disabled={cart.length === 0}
+          className={`btn w-full ${
+            cart.length === 0 ? "btn-disabled" : "btn-success"
+          }`}
         >
-          Proceed to Checkout ({cartItems.length})
+          Proceed to Checkout ({cart.length})
         </button>
+
+        {cart.length > 0 && (
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => navigate("/")}
+              className="btn btn-outline btn-sm"
+            >
+              Continue Shopping
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

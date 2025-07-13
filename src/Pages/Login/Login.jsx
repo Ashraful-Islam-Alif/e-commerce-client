@@ -63,7 +63,6 @@ const Login = () => {
     googleSignIn()
       .then((result) => {
         const googleUser = result.user;
-        console.log("Google Sign-In Successfully:", googleUser);
         navigate("/");
       })
       .catch((error) => {
