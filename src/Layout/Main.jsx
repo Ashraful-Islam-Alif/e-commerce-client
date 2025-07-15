@@ -8,7 +8,7 @@ const Main = () => {
   const noHeaderFooter =
     location.pathname.includes("login") ||
     location.pathname.includes("signup") ||
-    location.pathname.includes("myItems");
+    location.pathname.includes("dashboard/myItems");
 
   return (
     <div>

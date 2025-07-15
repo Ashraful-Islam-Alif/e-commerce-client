@@ -5,6 +5,8 @@ import ViewItems from "../Pages/ViewItems/ViewItems";
 import Login from "../Pages/Login/Login";
 import SignUp from "../Pages/SignUp/SignUp";
 import PrivateRoute from "./PrivateRoute";
+import Dashboard from "../Layout/Dashboard";
+import AllUsers from "../Pages/Dashboard/AllUsers/AllUsers";
 
 export const router = createBrowserRouter([
   {
@@ -16,16 +18,27 @@ export const router = createBrowserRouter([
         element: <Home></Home>,
       },
       {
-        path: "/myItems",
-        element: <ViewItems></ViewItems>,
-      },
-      {
         path: "/login",
         element: <Login></Login>,
       },
       {
         path: "/signup",
         element: <SignUp></SignUp>,
+      },
+    ],
+  },
+  {
+    path: "dashboard",
+    element: <Dashboard />,
+    children: [
+      // Admin
+      {
+        path: "myItems",
+        element: <ViewItems></ViewItems>,
+      },
+      {
+        path: "allUsers",
+        element: <AllUsers></AllUsers>,
       },
     ],
   },

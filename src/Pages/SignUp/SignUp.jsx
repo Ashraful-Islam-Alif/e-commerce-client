@@ -5,7 +5,10 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../providers/AuthProvider";
 import { Helmet } from "react-helmet-async";
+import useAxiosPublic from "../../hooks/useAxiosPublic";
+import Swal from "sweetalert2";
 const SignUp = () => {
+  const axiosPublic = useAxiosPublic();
   const navigate = useNavigate();
   const {
     register,
@@ -13,26 +16,57 @@ const SignUp = () => {
     handleSubmit,
     reset,
   } = useForm();
-  const { createUser, googleSignIn } = useContext(AuthContext);
+  const { createUser, googleSignIn, updateUserProfile } =
+    useContext(AuthContext);
 
   const [showPassword, setShowPassword] = useState(false);
   const togglePassword = () => setShowPassword(!showPassword);
 
   const onSubmit = (data) => {
-    console.log("SignUp Data:", data);
     createUser(data.email, data.password).then((result) => {
-      const loggedUser = result.user;
-      console.log(loggedUser);
-      reset();
-      navigate("/login");
+      updateUserProfile(data.name).then(() => {
+        //create user entry in the database
+        const userInfo = {
+          name: data.name,
+          email: data.email,
+        };
+        axiosPublic.post("/users", userInfo).then((res) => {
+          if (res.data.insertedId) {
+            console.log("user added to the database");
+            reset();
+            const Toast = Swal.mixin({
+              toast: true,
+              position: "top-end",
+              showConfirmButton: false,
+              timer: 3000,
+              timerProgressBar: true,
+              didOpen: (toast) => {
+                toast.onmouseenter = Swal.stopTimer;
+                toast.onmouseleave = Swal.resumeTimer;
+              },
+            });
+            Toast.fire({
+              icon: "success",
+              title: "Signed in successfully",
+            });
+            navigate("/login");
+          }
+        });
+      });
     });
   };
   const handleGoogleLogin = () => {
     googleSignIn()
       .then((result) => {
-        const googleUser = result.user;
-        console.log("Google Sign-In Successfully:", googleUser);
-        navigate("/");
+        console.log("Google Sign-In Successfully:", result.user);
+        const userInfo = {
+          name: result.user?.displayName,
+          email: result.user?.email,
+        };
+        axiosPublic.post("/users", userInfo).then((res) => {
+          console.log(res.data);
+          navigate("/");
+        });
       })
       .catch((error) => {
         console.error("Google Sign-In Error:", error);

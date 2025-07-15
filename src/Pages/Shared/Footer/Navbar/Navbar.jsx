@@ -50,7 +50,7 @@ const Navbar = () => {
   const handleCartClick = () => {
     if (user?.email) {
       setShowMobileMenu(false);
-      navigate("/myItems");
+      navigate("/dashboard/myItems");
     } else {
       handleAuthNavigation();
     }
@@ -81,6 +81,7 @@ const Navbar = () => {
     { name: "Tyre", path: "#" },
     { name: "Spare Parts", path: "#" },
     { name: "Engine Oil & Fluids", path: "#" },
+    { name: "Dashboard", path: "/dashboard" },
   ];
 
   const navItems = (

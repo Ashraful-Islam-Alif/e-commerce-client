@@ -2,20 +2,16 @@ import { FaPlus, FaMinus, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import useCart from "../../hooks/useCart";
 import useAuth from "../../hooks/useAuth";
+import useAxiosSecure from "../../hooks/useAxiosSecure";
+import Swal from "sweetalert2";
+import { Helmet } from "react-helmet-async";
 
 const ViewItems = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [
-    cart,
-    refetch,
-    isLoading,
-    isError,
-    error,
-    increaseQty,
-    decreaseQty,
-    removeItem,
-  ] = useCart();
+  const axiosSecure = useAxiosSecure();
+  const [cart, refetch, isLoading, isError, error, increaseQty, decreaseQty] =
+    useCart();
 
   const cartLength = cart.length;
   const subtotal = cart.reduce(
@@ -23,8 +19,36 @@ const ViewItems = () => {
     0
   );
 
+  const handleDelete = (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        axiosSecure.delete(`/carts/${id}`).then((res) => {
+          if (res.data.deletedCount > 0) {
+            refetch();
+            Swal.fire({
+              title: "Deleted!",
+              text: "Your file has been deleted.",
+              icon: "success",
+            });
+          }
+        });
+      }
+    });
+  };
+
   return (
-    <div className="p-6 flex flex-col lg:flex-row gap-6">
+    <div className=" flex flex-col lg:flex-row gap-6">
+      <Helmet>
+        <title>Grips & Gears | My Cart</title>
+      </Helmet>
       {/* Cart Table */}
       <div className="w-full lg:w-2/3">
         <h2 className="text-2xl font-bold mb-4">Shopping Cart</h2>
@@ -80,7 +104,7 @@ const ViewItems = () => {
                     <td>
                       <button
                         className="btn btn-sm btn-error text-white"
-                        onClick={() => removeItem(item._id)}
+                        onClick={() => handleDelete(item._id)}
                       >
                         <FaTrash />
                       </button>

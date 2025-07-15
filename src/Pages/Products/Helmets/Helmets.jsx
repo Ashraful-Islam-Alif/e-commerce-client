@@ -75,7 +75,7 @@ const Helmets = () => {
             timer: 1500,
           });
           refetch();
-          navigate("/myItems");
+          navigate("/dashboard/myItems");
         }
       });
     } else {
