@@ -15,7 +15,7 @@ const Dashboard = () => {
     <div className="flex">
       {/* dashboard side bar */}
       <div className="w-70 min-h-screen bg-emerald-500 rounded shadow-xl">
-        <div className="flex items-center justify-between h-16 px-4 bg-emerald-600">
+        <div className="flex items-center justify-between h-16 px-4 bg-emerald-600 shadow">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
               <span className="text-green-600 font-bold text-sm">G&G</span>

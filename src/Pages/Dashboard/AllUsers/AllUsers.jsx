@@ -13,7 +13,69 @@ const AllUsers = () => {
       return res.data;
     },
   });
-  const handleMakeAdmin = (id) => {};
+
+  // Common SweetAlert styling
+  const swalStyles = {
+    popup: {
+      padding: "20px",
+    },
+    actions: {
+      gap: "10px",
+      marginTop: "15px",
+    },
+  };
+
+  //make user an admin
+  const handleMakeAdmin = (user) => {
+    const swalWithBootstrapButtons = Swal.mixin({
+      customClass: {
+        confirmButton: "btn btn-success",
+        cancelButton: "btn btn-danger",
+      },
+      buttonsStyling: false,
+      didOpen: () => {
+        const popup = document.querySelector(".swal2-popup");
+        const actions = document.querySelector(".swal2-actions");
+
+        if (popup) {
+          Object.assign(popup.style, swalStyles.popup);
+        }
+        if (actions) {
+          Object.assign(actions.style, swalStyles.actions);
+        }
+      },
+    });
+
+    swalWithBootstrapButtons
+      .fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, Make Admin!",
+        cancelButtonText: "No, cancel!",
+        reverseButtons: true,
+      })
+      .then((result) => {
+        if (result.isConfirmed) {
+          axiosSecure.patch(`/users/admin/${user._id}`).then((res) => {
+            if (res.data.modifiedCount > 0) {
+              refetch();
+              swalWithBootstrapButtons.fire({
+                title: `Successfully made ${user.name} an Admin!`,
+                icon: "success",
+              });
+            }
+          });
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+          swalWithBootstrapButtons.fire({
+            title: "Cancelled",
+            text: "Your imaginary file is safe :)",
+            icon: "error",
+          });
+        }
+      });
+  };
 
   //delete user
   const handleDelete = (id) => {
@@ -25,6 +87,17 @@ const AllUsers = () => {
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
       confirmButtonText: "Yes, delete it!",
+      didOpen: () => {
+        const popup = document.querySelector(".swal2-popup");
+        const actions = document.querySelector(".swal2-actions");
+
+        if (popup) {
+          Object.assign(popup.style, swalStyles.popup);
+        }
+        if (actions) {
+          Object.assign(actions.style, swalStyles.actions);
+        }
+      },
     }).then((result) => {
       if (result.isConfirmed) {
         axiosSecure.delete(`/users/${id}`).then((res) => {
@@ -40,6 +113,7 @@ const AllUsers = () => {
       }
     });
   };
+
   return (
     <div className="w-full">
       <Helmet>
@@ -66,7 +140,7 @@ const AllUsers = () => {
                 <td>{user.email}</td>
                 <td>
                   {user.role === "admin" ? (
-                    "admin"
+                    "Admin"
                   ) : (
                     <button
                       onClick={() => handleMakeAdmin(user)}
