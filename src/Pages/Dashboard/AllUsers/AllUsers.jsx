@@ -13,7 +13,9 @@ const AllUsers = () => {
       return res.data;
     },
   });
-  const handleMakeAdmin = (user) => {};
+  const handleMakeAdmin = (id) => {};
+
+  //delete user
   const handleDelete = (id) => {
     Swal.fire({
       title: "Are you sure?",
