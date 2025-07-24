@@ -37,12 +37,6 @@ const Dashboard = () => {
                 </NavLink>
               </li>
               <li>
-                <NavLink to="/dashboard/reservation">
-                  <FaCalendar></FaCalendar>
-                  Reservation
-                </NavLink>
-              </li>
-              <li>
                 <NavLink to="/dashboard/myItems">
                   <FaShoppingCart></FaShoppingCart>
                   My Cart ({cart.length})
@@ -55,15 +49,15 @@ const Dashboard = () => {
                 </NavLink>
               </li>
               <li>
-                <NavLink to="/dashboard/bookings">
-                  <FaList></FaList>
-                  My Bookings
-                </NavLink>
-              </li>
-              <li>
                 <NavLink to="/dashboard/addItems">
                   <FaList></FaList>
                   Add Items
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/dashboard/manageItems">
+                  <FaList></FaList>
+                  Manage Items
                 </NavLink>
               </li>
               <li>
@@ -77,12 +71,6 @@ const Dashboard = () => {
                 <NavLink to="/">
                   <FaHome></FaHome>
                   Home
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to="/order/salad">
-                  <FaSearch></FaSearch>
-                  Menu
                 </NavLink>
               </li>
             </>
@@ -129,12 +117,6 @@ const Dashboard = () => {
                 <NavLink to="/">
                   <FaHome></FaHome>
                   Home
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to="/order/salad">
-                  <FaSearch></FaSearch>
-                  Menu
                 </NavLink>
               </li>
             </>

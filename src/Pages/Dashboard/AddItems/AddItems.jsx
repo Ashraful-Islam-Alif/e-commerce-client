@@ -1,9 +1,10 @@
 import { useForm } from "react-hook-form";
 import useAxiosPublic from "../../../hooks/useAxiosPublic";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import Swal from "sweetalert2";
 
 const image_hosting_key = import.meta.env.VITE_IMAGE_HOSTING_KEY;
 const image_hosting_api = `https://api.imgbb.com/1/upload?key=${image_hosting_key}`;
-const axiosPublic = useAxiosPublic();
 
 const AddItems = () => {
   const {
@@ -12,6 +13,8 @@ const AddItems = () => {
     reset,
     formState: { errors },
   } = useForm();
+  const axiosPublic = useAxiosPublic();
+  const axiosSecure = useAxiosSecure();
 
   const onSubmit = async (data) => {
     console.log(data);
@@ -23,6 +26,50 @@ const AddItems = () => {
         "content-type": "multipart/form-data",
       },
     });
+
+    if (res.data.success) {
+      const productItems = {
+        name: data.name,
+        category: data.category,
+        price: parseFloat(data.price),
+        details: data.details,
+        image: res.data.data.display_url,
+      };
+
+      // Determine the endpoint based on category
+      let endpoint = "";
+      switch (data.category.toLowerCase()) {
+        case "helmet":
+          endpoint = "/helmet";
+          break;
+        case "tyre":
+          endpoint = "/tyre";
+          break;
+        case "spareparts":
+          endpoint = "/spareparts";
+          break;
+        default:
+          console.error("Invalid category selected");
+          return;
+      }
+
+      const productRes = await axiosSecure.post(endpoint, productItems);
+      console.log(productRes.data);
+      if (productRes.data.insertedId) {
+        const allProductsItem = {
+          ...productItems,
+          _id: productRes.data.insertedId,
+        };
+        await axiosSecure.post("/allproducts", allProductsItem);
+        Swal.fire({
+          position: "top-end",
+          icon: "success",
+          title: `${data.name} is added successfully`,
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      }
+    }
     console.log(res.data);
     reset();
   };
@@ -65,11 +112,9 @@ const AddItems = () => {
               <option value="" disabled>
                 Select category
               </option>
-              <option value="Electronics">Electronics</option>
-              <option value="Clothing">Clothing</option>
-              <option value="Accessories">Accessories</option>
-              <option value="Home">Home</option>
-              <option value="Others">Others</option>
+              <option value="Helmet">Helmet</option>
+              <option value="Tyre">Tyre</option>
+              <option value="SpareParts">Spare Parts</option>
             </select>
             {errors.category && (
               <p className="text-red-500 text-sm mt-1">
