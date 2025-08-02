@@ -2,19 +2,18 @@ import React, { useState, useRef, useEffect, useContext } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaShoppingCart, FaBars, FaTimes } from "react-icons/fa";
 import Swal from "sweetalert2";
-
 import gearIcon from "./icon.png";
-import { AuthContext } from "../../../../providers/AuthProvider";
 import useCart from "../../../../hooks/useCart";
+import useAuth from "../../../../hooks/useAuth";
+import useAdmin from "../../../../hooks/useAdmin";
 
 const Navbar = () => {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [showCart, setShowCart] = useState(false);
-  const cartRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, LogOut } = useContext(AuthContext);
+  const { user, LogOut } = useAuth();
   const [cart] = useCart();
+  const [isAdmin] = useAdmin();
 
   const handleLogOut = () => {
     LogOut()
@@ -56,32 +55,11 @@ const Navbar = () => {
     }
   };
 
-  const toggleCart = () => {
-    if (user?.email) {
-      setShowCart(!showCart);
-      if (!showCart) setShowMobileMenu(false);
-    } else {
-      handleAuthNavigation();
-    }
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (cartRef.current && !cartRef.current.contains(event.target)) {
-        setShowCart(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   const navLinks = [
     { name: "Helmet", path: "/" },
     { name: "Tyre", path: "#" },
     { name: "Spare Parts", path: "#" },
     { name: "Engine Oil & Fluids", path: "#" },
-    { name: "Dashboard", path: "/dashboard" },
   ];
 
   const navItems = (
@@ -95,6 +73,22 @@ const Navbar = () => {
           {item.name}
         </Link>
       ))}
+      {user && isAdmin && (
+        <Link
+          to="/dashboard/adminHome"
+          className="px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors duration-200"
+        >
+          Dashboard
+        </Link>
+      )}
+      {user && !isAdmin && (
+        <Link
+          to="/dashboard/userHome"
+          className="px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors duration-200"
+        >
+          Dashboard
+        </Link>
+      )}
       {user ? (
         <button
           onClick={handleLogOut}

@@ -1,26 +1,25 @@
-import { useNavigate, useLocation } from "react-router-dom";
-import useHelmet from "../../../hooks/useHelmet";
-import { useContext } from "react";
-import { AuthContext } from "../../../providers/AuthProvider";
-import Swal from "sweetalert2";
+import { useLocation, useNavigate } from "react-router-dom";
+import useAuth from "../../../hooks/useAuth";
 import useCart from "../../../hooks/useCart";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import useTyre from "../../../hooks/useTyre";
+import Swal from "sweetalert2";
 
-const Helmets = () => {
+const Tyres = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, loading } = useContext(AuthContext);
-  const [helmets] = useHelmet();
+  const { user } = useAuth();
+  const [tyres, loading] = useTyre();
   const [, refetch] = useCart();
   const axiosSecure = useAxiosSecure();
 
-  const handleAddToCart = (helmet) => {
+  const handleAddToCart = (tyre) => {
     if (user && user.email) {
       const cartItem = {
-        productId: helmet._id,
-        name: helmet.name,
-        image: helmet.image,
-        price: helmet.price,
+        productId: tyre._id,
+        name: tyre.name,
+        image: tyre.image,
+        price: tyre.price,
         email: user.email,
         quantity: 1,
       };
@@ -30,7 +29,7 @@ const Helmets = () => {
           Swal.fire({
             position: "top-end",
             icon: "success",
-            title: `${helmet.name} added to your cart`,
+            title: `${tyre.name} added to your cart`,
             showConfirmButton: false,
             timer: 1500,
           });
@@ -39,7 +38,7 @@ const Helmets = () => {
       });
     } else {
       Swal.fire({
-        title: "Please login to add the helmet",
+        title: "Please login to add the tyre",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -53,13 +52,13 @@ const Helmets = () => {
     }
   };
 
-  const handleBuyNow = (helmet) => {
+  const handleBuyNow = (tyre) => {
     if (user && user.email) {
       const cartItem = {
-        productId: helmet._id,
-        name: helmet.name,
-        image: helmet.image,
-        price: helmet.price,
+        productId: tyre._id,
+        name: tyre.name,
+        image: tyre.image,
+        price: tyre.price,
         email: user.email,
         quantity: 1,
       };
@@ -70,7 +69,7 @@ const Helmets = () => {
           Swal.fire({
             position: "top-end",
             icon: "success",
-            title: `${helmet.name} added to your cart`,
+            title: `${tyre.name} added to your cart`,
             showConfirmButton: false,
             timer: 1500,
           });
@@ -80,7 +79,7 @@ const Helmets = () => {
       });
     } else {
       Swal.fire({
-        title: "Please login to add the helmet",
+        title: "Please login to add the tyre",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -96,45 +95,45 @@ const Helmets = () => {
 
   return (
     <div className="p-6 mt-8">
-      <h2 className="text-3xl font-bold mb-6 text-center">Helmet Collection</h2>
+      <h2 className="text-3xl font-bold mb-6 text-center">Tyre Collection</h2>
 
       {loading ? (
         // show loader while data is being fetched
         <div className="text-center py-12">
           <span className="loading loading-spinner loading-lg text-primary"></span>
         </div>
-      ) : helmets.length === 0 ? (
+      ) : tyres.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">
-            No helmets available at the moment.
+            No tyres available at the moment.
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {helmets.map((helmet) => (
-            <div key={helmet._id} className="card bg-base-100 shadow-xl">
+          {tyres.map((tyre) => (
+            <div key={tyre._id} className="card bg-base-100 shadow-xl">
               <figure>
                 <img
-                  src={helmet.image}
-                  alt={helmet.name}
+                  src={tyre.image}
+                  alt={tyre.name}
                   className="h-48 w-full object-contain p-4"
                 />
               </figure>
               <div className="card-body text-center">
-                <h2 className="text-xl font-semibold">{helmet.name}</h2>
+                <h2 className="text-xl font-semibold">{tyre.name}</h2>
                 <p className="text-lg font-medium text-primary">
-                  ৳ {helmet.price}
+                  ৳ {tyre.price}
                 </p>
                 <div className="card-actions justify-center mt-4">
                   <button
                     className="btn btn-primary"
-                    onClick={() => handleBuyNow(helmet)}
+                    onClick={() => handleBuyNow(tyre)}
                   >
                     Buy Now
                   </button>
                   <button
                     className="btn btn-outline"
-                    onClick={() => handleAddToCart(helmet)}
+                    onClick={() => handleAddToCart(tyre)}
                   >
                     Add to Cart
                   </button>
@@ -148,4 +147,4 @@ const Helmets = () => {
   );
 };
 
-export default Helmets;
+export default Tyres;

@@ -2,6 +2,7 @@ import useCart from "../hooks/useCart";
 import {
   FaAd,
   FaCalendar,
+  FaClipboardList,
   FaHome,
   FaList,
   FaSearch,
@@ -83,33 +84,21 @@ const Dashboard = () => {
                 </NavLink>
               </li>
               <li>
-                <NavLink to="/dashboard/reservation">
-                  <FaCalendar></FaCalendar>
-                  Reservation
-                </NavLink>
-              </li>
-              <li>
                 <NavLink to="/dashboard/myItems">
                   <FaShoppingCart></FaShoppingCart>
                   My Cart ({cart.length})
                 </NavLink>
               </li>
               <li>
-                <NavLink to="/dashboard/review">
-                  <FaAd></FaAd>
-                  Add a Review
+                <NavLink to="/dashboard/myItems">
+                  <FaShoppingCart></FaShoppingCart>
+                  Payment History
                 </NavLink>
               </li>
               <li>
-                <NavLink to="/dashboard/bookings">
-                  <FaList></FaList>
-                  My Bookings
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to="/dashboard/allUsers">
-                  <FaList></FaList>
-                  All Users
+                <NavLink to="/dashboard/orders">
+                  <FaClipboardList />
+                  My Orders
                 </NavLink>
               </li>
               <div className="divider"></div>

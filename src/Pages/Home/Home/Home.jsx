@@ -1,4 +1,5 @@
 import Helmets from "../../Products/Helmets/Helmets";
+import Tyres from "../../Products/Tyres/Tyres";
 import Banner from "./Banner/Banner";
 
 const Home = () => {
@@ -6,6 +7,7 @@ const Home = () => {
     <div>
       <Banner></Banner>
       <Helmets></Helmets>
+      <Tyres></Tyres>
     </div>
   );
 };

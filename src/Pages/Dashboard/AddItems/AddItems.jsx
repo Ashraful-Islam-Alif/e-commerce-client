@@ -1,7 +1,9 @@
 import { useForm } from "react-hook-form";
 import useAxiosPublic from "../../../hooks/useAxiosPublic";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import useLoading from "../../../hooks/useLoading";
 import Swal from "sweetalert2";
+import { FaSpinner } from "react-icons/fa";
 
 const image_hosting_key = import.meta.env.VITE_IMAGE_HOSTING_KEY;
 const image_hosting_api = `https://api.imgbb.com/1/upload?key=${image_hosting_key}`;
@@ -15,19 +17,24 @@ const AddItems = () => {
   } = useForm();
   const axiosPublic = useAxiosPublic();
   const axiosSecure = useAxiosSecure();
+  const { loading, startLoading, stopLoading, setErrorState, resetError } =
+    useLoading();
 
   const onSubmit = async (data) => {
-    console.log(data);
+    resetError();
+    startLoading();
 
-    //image upload to imgbb and then get an url
-    const imageFile = { image: data.image[0] };
-    const res = await axiosPublic.post(image_hosting_api, imageFile, {
-      headers: {
-        "content-type": "multipart/form-data",
-      },
-    });
+    try {
+      // Upload image
+      const imageFile = { image: data.image[0] };
+      const res = await axiosPublic.post(image_hosting_api, imageFile, {
+        headers: {
+          "content-type": "multipart/form-data",
+        },
+      });
 
-    if (res.data.success) {
+      if (!res.data.success) throw new Error("Image upload failed");
+
       const productItems = {
         name: data.name,
         category: data.category,
@@ -36,7 +43,7 @@ const AddItems = () => {
         image: res.data.data.display_url,
       };
 
-      // Determine the endpoint based on category
+      // Determine category endpoint
       let endpoint = "";
       switch (data.category.toLowerCase()) {
         case "helmet":
@@ -49,18 +56,19 @@ const AddItems = () => {
           endpoint = "/spareparts";
           break;
         default:
-          console.error("Invalid category selected");
-          return;
+          throw new Error("Invalid category selected");
       }
 
+      // Add to category collection
       const productRes = await axiosSecure.post(endpoint, productItems);
-      console.log(productRes.data);
+
       if (productRes.data.insertedId) {
         const allProductsItem = {
           ...productItems,
           _id: productRes.data.insertedId,
         };
         await axiosSecure.post("/allproducts", allProductsItem);
+
         Swal.fire({
           position: "top-end",
           icon: "success",
@@ -68,10 +76,26 @@ const AddItems = () => {
           showConfirmButton: false,
           timer: 1500,
         });
+        reset();
+      } else {
+        throw new Error("Failed to add product to category collection");
       }
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to add product. Please try again.";
+      setErrorState(errorMessage);
+
+      Swal.fire({
+        title: "Error!",
+        text: errorMessage,
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    } finally {
+      stopLoading();
     }
-    console.log(res.data);
-    reset();
   };
 
   return (
@@ -93,8 +117,9 @@ const AddItems = () => {
               })}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-400"
               placeholder="Enter product name"
+              disabled={loading}
             />
-            {errors.productName && (
+            {errors.name && (
               <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
             )}
           </div>
@@ -108,6 +133,7 @@ const AddItems = () => {
               {...register("category", { required: "Category is required" })}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-white"
               defaultValue=""
+              disabled={loading}
             >
               <option value="" disabled>
                 Select category
@@ -133,6 +159,7 @@ const AddItems = () => {
               {...register("price", { required: "Price is required" })}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-400"
               placeholder="Enter price"
+              disabled={loading}
             />
             {errors.price && (
               <p className="text-red-500 text-sm mt-1">
@@ -151,6 +178,7 @@ const AddItems = () => {
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-400"
               placeholder="Enter product details"
               rows="3"
+              disabled={loading}
             ></textarea>
             {errors.details && (
               <p className="text-red-500 text-sm mt-1">
@@ -169,6 +197,7 @@ const AddItems = () => {
               type="file"
               accept="image/*"
               className="block w-full text-gray-700 border rounded-lg p-2 bg-gray-50 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+              disabled={loading}
             />
             {errors.image && (
               <p className="text-red-500 text-sm mt-1">
@@ -180,12 +209,28 @@ const AddItems = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-indigo-500  text-white py-3 rounded-lg font-semibold shadow-md hover:opacity-90"
+            disabled={loading}
+            className="w-full bg-indigo-500 text-white py-3 rounded-lg font-semibold shadow-md hover:opacity-90"
           >
-            Add Item
+            {loading ? (
+              <FaSpinner className="animate-spin mx-auto text-xl" />
+            ) : (
+              "Add Item"
+            )}
           </button>
         </form>
       </div>
+
+      {/* Loading overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+            <FaSpinner className="animate-spin text-3xl text-blue-500 mx-auto mb-4" />
+            <p className="text-lg font-semibold">Adding product...</p>
+            <p className="text-sm text-gray-600">Please wait</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
