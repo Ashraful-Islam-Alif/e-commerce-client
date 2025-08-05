@@ -51,67 +51,90 @@ const UserOrders = () => {
     try {
       const doc = new jsPDF();
 
-      // Set fonts and colors
-      doc.setFontSize(20);
-      doc.setTextColor(40, 40, 40);
+      // Helper function to format currency properly
+      const formatCurrency = (amount) => {
+        const numAmount =
+          typeof amount === "string" ? parseFloat(amount) : amount;
+        return `Tk ${numAmount.toFixed(2)}`;
+      };
+
+      // Set up page margins and dimensions
+      const margin = 20;
+      const pageWidth = doc.internal.pageSize.width;
+      const contentWidth = pageWidth - margin * 2;
 
       // Header with company name
-      doc.text("GRIPS & GEARS", 20, 30);
+      doc.setFontSize(20);
+      doc.setTextColor(40, 40, 40);
+      doc.text("GRIPS & GEARS", margin, 30);
+
       doc.setFontSize(12);
       doc.setTextColor(100, 100, 100);
-      doc.text("Motorcycle Parts & Accessories", 20, 40);
+      doc.text("Motorcycle Parts & Accessories", margin, 40);
 
       // Invoice title
       doc.setFontSize(16);
       doc.setTextColor(40, 40, 40);
       doc.text("INVOICE", 150, 30);
 
-      // Invoice details box
+      // Invoice details box - improved positioning
+      const boxX = 140;
+      const boxY = 35;
+      const boxWidth = 60;
+      const boxHeight = 25;
+
       doc.setDrawColor(200, 200, 200);
-      doc.rect(140, 35, 60, 25);
+      doc.setFillColor(250, 250, 250);
+      doc.rect(boxX, boxY, boxWidth, boxHeight, "FD");
+
       doc.setFontSize(10);
-      doc.text(`Invoice #: ${order.transactionId.substring(0, 12)}`, 145, 45);
+      doc.setTextColor(60, 60, 60);
+      doc.text(
+        `Invoice #: ${order.transactionId.substring(0, 12)}`,
+        boxX + 5,
+        boxY + 8
+      );
       doc.text(
         `Date: ${new Date(order.createdAt).toLocaleDateString()}`,
-        145,
-        52
+        boxX + 5,
+        boxY + 16
       );
 
       // Customer Information
       let yPos = 75;
       doc.setFontSize(12);
       doc.setTextColor(40, 40, 40);
-      doc.text("Bill To:", 20, yPos);
+      doc.text("Bill To:", margin, yPos);
 
       doc.setFontSize(10);
       yPos += 8;
-      doc.text(order.customerInfo.name, 20, yPos);
+      doc.text(order.customerInfo.name, margin, yPos);
       yPos += 6;
-      doc.text(order.customerInfo.address, 20, yPos);
+      doc.text(order.customerInfo.address, margin, yPos);
 
       if (order.customerInfo.address2) {
         yPos += 6;
-        doc.text(order.customerInfo.address2, 20, yPos);
+        doc.text(order.customerInfo.address2, margin, yPos);
       }
 
       yPos += 6;
       doc.text(
         `${order.customerInfo.city}, ${order.customerInfo.postcode}`,
-        20,
+        margin,
         yPos
       );
 
       if (order.customerInfo.state) {
         yPos += 6;
-        doc.text(order.customerInfo.state, 20, yPos);
+        doc.text(order.customerInfo.state, margin, yPos);
       }
 
       yPos += 6;
-      doc.text(order.customerInfo.country || "Bangladesh", 20, yPos);
+      doc.text(order.customerInfo.country || "Bangladesh", margin, yPos);
       yPos += 6;
-      doc.text(`Phone: ${order.customerInfo.phone}`, 20, yPos);
+      doc.text(`Phone: ${order.customerInfo.phone}`, margin, yPos);
       yPos += 6;
-      doc.text(`Email: ${order.email}`, 20, yPos);
+      doc.text(`Email: ${order.email}`, margin, yPos);
 
       // Order Information (right side)
       let rightYPos = 75;
@@ -131,20 +154,43 @@ const UserOrders = () => {
       rightYPos += 6;
       doc.text("Payment Method: SSL Commerz", 120, rightYPos);
 
-      // Items table
+      // Items table with improved layout
       yPos = Math.max(yPos, rightYPos) + 20;
 
-      // Table header
+      // Table dimensions
+      const tableX = margin;
+      const tableWidth = 170;
+      const colWidths = {
+        item: tableWidth * 0.45, // 45% for item name
+        qty: tableWidth * 0.15, // 15% for quantity
+        price: tableWidth * 0.2, // 20% for unit price
+        total: tableWidth * 0.2, // 20% for total
+      };
+
+      // Table header with better alignment
       doc.setFillColor(240, 240, 240);
-      doc.rect(20, yPos, 170, 8, "F");
+      doc.rect(tableX, yPos, tableWidth, 8, "F");
+
       doc.setFontSize(10);
       doc.setTextColor(40, 40, 40);
-      doc.text("Item", 25, yPos + 6);
-      doc.text("Qty", 120, yPos + 6);
-      doc.text("Price", 140, yPos + 6);
-      doc.text("Total", 165, yPos + 6);
+      doc.text("Item", tableX + 5, yPos + 6);
 
-      // Table content
+      // Center-align headers
+      const qtyHeaderX = tableX + colWidths.item + colWidths.qty / 2;
+      const priceHeaderX =
+        tableX + colWidths.item + colWidths.qty + colWidths.price / 2;
+      const totalHeaderX =
+        tableX +
+        colWidths.item +
+        colWidths.qty +
+        colWidths.price +
+        colWidths.total / 2;
+
+      doc.text("Qty", qtyHeaderX, yPos + 6, { align: "center" });
+      doc.text("Price", priceHeaderX, yPos + 6, { align: "center" });
+      doc.text("Total", totalHeaderX, yPos + 6, { align: "center" });
+
+      // Table content with proper alignment
       yPos += 12;
       let subtotal = 0;
 
@@ -152,69 +198,110 @@ const UserOrders = () => {
         const itemTotal = item.price * item.quantity;
         subtotal += itemTotal;
 
-        // Item row
+        // Alternate row background
         doc.setFillColor(index % 2 === 0 ? 255 : 250, 250, 250);
-        doc.rect(20, yPos - 2, 170, 8, "F");
+        doc.rect(tableX, yPos - 2, tableWidth, 8, "F");
 
-        // Wrap long item names
+        doc.setFontSize(10);
+        doc.setTextColor(60, 60, 60);
+
+        // Item name - truncate if too long
         const itemName =
-          item.name.length > 40
-            ? item.name.substring(0, 37) + "..."
+          item.name.length > 35
+            ? item.name.substring(0, 32) + "..."
             : item.name;
-        doc.text(itemName, 25, yPos + 4);
-        doc.text(item.quantity.toString(), 125, yPos + 4);
-        doc.text(`৳${item.price.toFixed(2)}`, 140, yPos + 4);
-        doc.text(`৳${itemTotal.toFixed(2)}`, 165, yPos + 4);
+        doc.text(itemName, tableX + 5, yPos + 4);
+
+        // Quantity - centered
+        const qtyX = tableX + colWidths.item + colWidths.qty / 2;
+        doc.text(item.quantity.toString(), qtyX, yPos + 4, { align: "center" });
+
+        // Unit price - centered
+        const priceX =
+          tableX + colWidths.item + colWidths.qty + colWidths.price / 2;
+        doc.text(formatCurrency(item.price), priceX, yPos + 4, {
+          align: "center",
+        });
+
+        // Total - centered
+        const totalX =
+          tableX +
+          colWidths.item +
+          colWidths.qty +
+          colWidths.price +
+          colWidths.total / 2;
+        doc.text(formatCurrency(itemTotal), totalX, yPos + 4, {
+          align: "center",
+        });
 
         yPos += 10;
       });
 
-      // Total section
+      // Total section with improved alignment
       yPos += 10;
       doc.setDrawColor(200, 200, 200);
       doc.line(120, yPos, 190, yPos);
 
+      // Calculate positions for totals alignment
+      const totalsLabelX = 120;
+      const totalsValueX =
+        tableX +
+        colWidths.item +
+        colWidths.qty +
+        colWidths.price +
+        colWidths.total / 2;
+
       yPos += 8;
       doc.setFontSize(12);
       doc.setTextColor(40, 40, 40);
-      doc.text("Subtotal:", 120, yPos);
-      doc.text(`৳${subtotal.toFixed(2)}`, 165, yPos);
+      doc.text("Subtotal:", totalsLabelX, yPos);
+      doc.text(formatCurrency(subtotal), totalsValueX, yPos, {
+        align: "center",
+      });
 
       // Check if there are gateway fees
       if (order.paymentDetails && order.paymentDetails.gateway_fees) {
         yPos += 8;
         doc.setFontSize(10);
         doc.setTextColor(100, 100, 100);
-        doc.text("Gateway Fees:", 120, yPos);
-        doc.text(`৳${order.paymentDetails.gateway_fees.toFixed(2)}`, 165, yPos);
+        doc.text("Gateway Fees:", totalsLabelX, yPos);
+        doc.text(
+          formatCurrency(order.paymentDetails.gateway_fees),
+          totalsValueX,
+          yPos,
+          { align: "center" }
+        );
 
         yPos += 8;
         doc.setFontSize(12);
         doc.setTextColor(40, 40, 40);
-        doc.text("Total Paid:", 120, yPos);
+        doc.text("Total Paid:", totalsLabelX, yPos);
         doc.text(
-          `৳${
+          formatCurrency(
             order.paymentDetails.total_paid_by_customer || order.totalAmount
-          }`,
-          165,
-          yPos
+          ),
+          totalsValueX,
+          yPos,
+          { align: "center" }
         );
       } else {
         yPos += 8;
         doc.setFontSize(12);
-        doc.text("Total:", 120, yPos);
-        doc.text(`৳${order.totalAmount}`, 165, yPos);
+        doc.text("Total:", totalsLabelX, yPos);
+        doc.text(formatCurrency(order.totalAmount), totalsValueX, yPos, {
+          align: "center",
+        });
       }
 
       // Footer
       yPos += 25;
       doc.setFontSize(10);
       doc.setTextColor(100, 100, 100);
-      doc.text("Thank you for shopping with Grips & Gears!", 20, yPos);
+      doc.text("Thank you for shopping with Grips & Gears!", margin, yPos);
       yPos += 6;
       doc.text(
         "For support, contact us at support@gripsandgears.com",
-        20,
+        margin,
         yPos
       );
 
