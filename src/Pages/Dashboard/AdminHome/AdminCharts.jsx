@@ -25,7 +25,8 @@ const AdminCharts = ({
   productCategories,
   topSellingProducts,
 }) => {
-  const [viewType, setViewType] = useState("monthly");
+  const [orderViewType, setOrderViewType] = useState("monthly");
+  const [revenueViewType, setRevenueViewType] = useState("monthly");
 
   const chartData = monthlyStats.map((stat) => ({
     name: formatMonth(stat._id.year, stat._id.month),
@@ -41,18 +42,47 @@ const AdminCharts = ({
         slice[0]._id.year
       }`;
       const orders = slice.reduce((sum, s) => sum + s.orderCount, 0);
-      quarterlyData.push({ name: quarterLabel, orders });
+      const revenue = slice.reduce((sum, s) => sum + s.monthlyRevenue, 0);
+      quarterlyData.push({ name: quarterLabel, orders, revenue });
     }
   }
 
+  const yearlyData = [];
+  const yearMap = {};
+  for (let stat of monthlyStats) {
+    const year = stat._id.year;
+    if (!yearMap[year])
+      yearMap[year] = { name: `${year}`, orders: 0, revenue: 0 };
+    yearMap[year].orders += stat.orderCount;
+    yearMap[year].revenue += stat.monthlyRevenue;
+  }
+  for (let key in yearMap) yearlyData.push(yearMap[key]);
+  let displayOrderData = chartData;
+  if (orderViewType === "quarterly") displayOrderData = quarterlyData;
+  else if (orderViewType === "yearly") displayOrderData = yearlyData;
+
+  let displayRevenueData = chartData;
+  if (revenueViewType === "quarterly") displayRevenueData = quarterlyData;
+  else if (revenueViewType === "yearly") displayRevenueData = yearlyData;
   return (
     <div className="grid gap-6">
       <div className="grid md:grid-cols-2 gap-6">
         {/* Monthly Revenue */}
         <div className="bg-white shadow p-4 rounded-2xl">
-          <h2 className="text-xl font-semibold mb-2">Monthly Revenue</h2>
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-xl font-semibold mb-2">Revenue</h2>
+            <select
+              className="border px-2 py-1 rounded text-sm"
+              value={revenueViewType}
+              onChange={(e) => setRevenueViewType(e.target.value)}
+            >
+              <option value="monthly">Monthly Revenue</option>
+              <option value="quarterly">Quarterly Revenue</option>
+              <option value="yearly">Yearly Revenue</option>
+            </select>
+          </div>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
+            <LineChart data={displayRevenueData}>
               <Line
                 type="monotone"
                 dataKey="revenue"
@@ -73,15 +103,16 @@ const AdminCharts = ({
             <h2 className="text-xl font-semibold">Orders</h2>
             <select
               className="border px-2 py-1 rounded text-sm"
-              value={viewType}
-              onChange={(e) => setViewType(e.target.value)}
+              value={orderViewType}
+              onChange={(e) => setOrderViewType(e.target.value)}
             >
               <option value="monthly">Monthly Orders</option>
               <option value="quarterly">Quarterly Orders</option>
+              <option value="yearly">Yearly Orders</option>
             </select>
           </div>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={viewType === "monthly" ? chartData : quarterlyData}>
+            <BarChart data={displayOrderData}>
               <Bar dataKey="orders" fill="#6366f1" barSize={40} />
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />

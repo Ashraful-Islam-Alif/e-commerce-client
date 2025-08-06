@@ -58,13 +58,40 @@ const UserOrders = () => {
         return `Tk ${numAmount.toFixed(2)}`;
       };
 
-      // Set up page margins and dimensions
+      // Helper function to wrap text
+      const wrapText = (text, maxWidth) => {
+        const words = text.split(" ");
+        const lines = [];
+        let currentLine = "";
+
+        words.forEach((word) => {
+          const testLine = currentLine + (currentLine ? " " : "") + word;
+          const textWidth =
+            (doc.getStringUnitWidth(testLine) * doc.internal.getFontSize()) /
+            doc.internal.scaleFactor;
+
+          if (textWidth > maxWidth && currentLine) {
+            lines.push(currentLine);
+            currentLine = word;
+          } else {
+            currentLine = testLine;
+          }
+        });
+
+        if (currentLine) {
+          lines.push(currentLine);
+        }
+
+        return lines;
+      };
+
+      //set up page margins
       const margin = 20;
       const pageWidth = doc.internal.pageSize.width;
       const contentWidth = pageWidth - margin * 2;
 
       // Header with company name
-      doc.setFontSize(20);
+      doc.setFontSize(24);
       doc.setTextColor(40, 40, 40);
       doc.text("GRIPS & GEARS", margin, 30);
 
@@ -72,16 +99,16 @@ const UserOrders = () => {
       doc.setTextColor(100, 100, 100);
       doc.text("Motorcycle Parts & Accessories", margin, 40);
 
-      // Invoice title
-      doc.setFontSize(16);
+      // Invoice title and details box
+      doc.setFontSize(18);
       doc.setTextColor(40, 40, 40);
-      doc.text("INVOICE", 150, 30);
+      doc.text("INVOICE", pageWidth - margin - 50, 30);
 
-      // Invoice details box - improved positioning
-      const boxX = 140;
+      // Invoice details box - better positioned
+      const boxX = pageWidth - margin - 70;
       const boxY = 35;
-      const boxWidth = 60;
-      const boxHeight = 25;
+      const boxWidth = 65;
+      const boxHeight = 30;
 
       doc.setDrawColor(200, 200, 200);
       doc.setFillColor(250, 250, 250);
@@ -91,23 +118,29 @@ const UserOrders = () => {
       doc.setTextColor(60, 60, 60);
       doc.text(
         `Invoice #: ${order.transactionId.substring(0, 12)}`,
-        boxX + 5,
+        boxX + 3,
         boxY + 8
       );
       doc.text(
         `Date: ${new Date(order.createdAt).toLocaleDateString()}`,
-        boxX + 5,
+        boxX + 3,
         boxY + 16
       );
+      doc.text(
+        `Status: ${order.paymentStatus.toUpperCase()}`,
+        boxX + 3,
+        boxY + 24
+      );
 
-      // Customer Information
-      let yPos = 75;
-      doc.setFontSize(12);
+      // Customer Information Section
+      let yPos = 80;
+      doc.setFontSize(14);
       doc.setTextColor(40, 40, 40);
-      doc.text("Bill To:", margin, yPos);
+      doc.text("BILL TO:", margin, yPos);
 
-      doc.setFontSize(10);
-      yPos += 8;
+      // Customer details with better spacing
+      doc.setFontSize(11);
+      yPos += 10;
       doc.text(order.customerInfo.name, margin, yPos);
       yPos += 6;
       doc.text(order.customerInfo.address, margin, yPos);
@@ -136,30 +169,31 @@ const UserOrders = () => {
       yPos += 6;
       doc.text(`Email: ${order.email}`, margin, yPos);
 
-      // Order Information (right side)
-      let rightYPos = 75;
-      doc.setFontSize(12);
-      doc.text("Order Information:", 120, rightYPos);
+      // Order Information (right side) - better positioned
+      let rightYPos = 80;
+      const rightX = pageWidth - margin - 80;
+      doc.setFontSize(14);
+      doc.text("ORDER INFO:", rightX, rightYPos);
+
       doc.setFontSize(10);
-      rightYPos += 8;
-      doc.text(`Order ID: ${order.transactionId}`, 120, rightYPos);
+      rightYPos += 10;
+      doc.text(`Order ID:`, rightX, rightYPos);
+      doc.text(`${order.transactionId}`, rightX, rightYPos + 4);
+      rightYPos += 12;
+      doc.text(`Payment Method: SSL Commerz`, rightX, rightYPos);
       rightYPos += 6;
       doc.text(
-        `Payment Status: ${order.paymentStatus.toUpperCase()}`,
-        120,
+        `Order Status: ${order.status.toUpperCase()}`,
+        rightX,
         rightYPos
       );
-      rightYPos += 6;
-      doc.text(`Order Status: ${order.status.toUpperCase()}`, 120, rightYPos);
-      rightYPos += 6;
-      doc.text("Payment Method: SSL Commerz", 120, rightYPos);
 
       // Items table with improved layout
-      yPos = Math.max(yPos, rightYPos) + 20;
+      yPos = Math.max(yPos, rightYPos) + 25;
 
       // Table dimensions
       const tableX = margin;
-      const tableWidth = 170;
+      const tableWidth = contentWidth;
       const colWidths = {
         item: tableWidth * 0.45, // 45% for item name
         qty: tableWidth * 0.15, // 15% for quantity
@@ -169,26 +203,30 @@ const UserOrders = () => {
 
       // Table header with better alignment
       doc.setFillColor(240, 240, 240);
-      doc.rect(tableX, yPos, tableWidth, 8, "F");
+      doc.rect(tableX, yPos, tableWidth, 10, "F");
 
-      doc.setFontSize(10);
+      doc.setFontSize(11);
       doc.setTextColor(40, 40, 40);
-      doc.text("Item", tableX + 5, yPos + 6);
-
-      // Center-align headers
-      const qtyHeaderX = tableX + colWidths.item + colWidths.qty / 2;
-      const priceHeaderX =
-        tableX + colWidths.item + colWidths.qty + colWidths.price / 2;
-      const totalHeaderX =
+      doc.text("Item", tableX + 3, yPos + 7);
+      doc.text("Qty", tableX + colWidths.item + colWidths.qty / 2, yPos + 7, {
+        align: "center",
+      });
+      doc.text(
+        "Unit Price",
+        tableX + colWidths.item + colWidths.qty + colWidths.price / 2,
+        yPos + 7,
+        { align: "center" }
+      );
+      doc.text(
+        "Total",
         tableX +
-        colWidths.item +
-        colWidths.qty +
-        colWidths.price +
-        colWidths.total / 2;
-
-      doc.text("Qty", qtyHeaderX, yPos + 6, { align: "center" });
-      doc.text("Price", priceHeaderX, yPos + 6, { align: "center" });
-      doc.text("Total", totalHeaderX, yPos + 6, { align: "center" });
+          colWidths.item +
+          colWidths.qty +
+          colWidths.price +
+          colWidths.total / 2,
+        yPos + 7,
+        { align: "center" }
+      );
 
       // Table content with proper alignment
       yPos += 12;
@@ -199,18 +237,20 @@ const UserOrders = () => {
         subtotal += itemTotal;
 
         // Alternate row background
-        doc.setFillColor(index % 2 === 0 ? 255 : 250, 250, 250);
-        doc.rect(tableX, yPos - 2, tableWidth, 8, "F");
+        if (index % 2 === 0) {
+          doc.setFillColor(252, 252, 252);
+          doc.rect(tableX, yPos - 2, tableWidth, 10, "F");
+        }
 
         doc.setFontSize(10);
         doc.setTextColor(60, 60, 60);
 
-        // Item name - truncate if too long
+        // Item name - with text wrapping if needed
         const itemName =
           item.name.length > 35
             ? item.name.substring(0, 32) + "..."
             : item.name;
-        doc.text(itemName, tableX + 5, yPos + 4);
+        doc.text(itemName, tableX + 3, yPos + 6);
 
         // Quantity - centered
         const qtyX = tableX + colWidths.item + colWidths.qty / 2;
@@ -230,20 +270,29 @@ const UserOrders = () => {
           colWidths.qty +
           colWidths.price +
           colWidths.total / 2;
-        doc.text(formatCurrency(itemTotal), totalX, yPos + 4, {
+        doc.text(formatCurrency(itemTotal), totalX, yPos + 6, {
           align: "center",
         });
 
-        yPos += 10;
+        yPos += 12;
       });
 
-      // Total section with improved alignment
+      // Total section with better alignment
       yPos += 10;
-      doc.setDrawColor(200, 200, 200);
-      doc.line(120, yPos, 190, yPos);
 
-      // Calculate positions for totals alignment
-      const totalsLabelX = 120;
+      // Draw line above totals
+      doc.setDrawColor(200, 200, 200);
+      doc.line(
+        tableX + colWidths.item + colWidths.qty,
+        yPos - 5,
+        tableX + tableWidth,
+        yPos - 5
+      );
+
+      // Subtotal
+      doc.setFontSize(11);
+      doc.setTextColor(40, 40, 40);
+      const totalsLabelX = tableX + colWidths.item + colWidths.qty;
       const totalsValueX =
         tableX +
         colWidths.item +
@@ -251,15 +300,12 @@ const UserOrders = () => {
         colWidths.price +
         colWidths.total / 2;
 
-      yPos += 8;
-      doc.setFontSize(12);
-      doc.setTextColor(40, 40, 40);
       doc.text("Subtotal:", totalsLabelX, yPos);
       doc.text(formatCurrency(subtotal), totalsValueX, yPos, {
         align: "center",
       });
 
-      // Check if there are gateway fees
+      // Gateway fees if applicable
       if (order.paymentDetails && order.paymentDetails.gateway_fees) {
         yPos += 8;
         doc.setFontSize(10);
@@ -272,10 +318,10 @@ const UserOrders = () => {
           { align: "center" }
         );
 
-        yPos += 8;
-        doc.setFontSize(12);
+        yPos += 12;
+        doc.setFontSize(14);
         doc.setTextColor(40, 40, 40);
-        doc.text("Total Paid:", totalsLabelX, yPos);
+        doc.text("TOTAL PAID:", totalsLabelX, yPos);
         doc.text(
           formatCurrency(
             order.paymentDetails.total_paid_by_customer || order.totalAmount
@@ -285,34 +331,43 @@ const UserOrders = () => {
           { align: "center" }
         );
       } else {
-        yPos += 8;
-        doc.setFontSize(12);
-        doc.text("Total:", totalsLabelX, yPos);
+        yPos += 12;
+        doc.setFontSize(14);
+        doc.setTextColor(40, 40, 40);
+        doc.text("TOTAL:", totalsLabelX, yPos);
         doc.text(formatCurrency(order.totalAmount), totalsValueX, yPos, {
           align: "center",
         });
       }
 
-      // Footer
-      yPos += 25;
+      // Footer section
+      yPos += 30;
+      doc.setFontSize(12);
+      doc.setTextColor(60, 60, 60);
+      doc.text("Thank you for shopping with Grips & Gears!", margin, yPos);
+
+      yPos += 8;
       doc.setFontSize(10);
       doc.setTextColor(100, 100, 100);
-      doc.text("Thank you for shopping with Grips & Gears!", margin, yPos);
-      yPos += 6;
       doc.text(
         "For support, contact us at support@gripsandgears.com",
         margin,
         yPos
       );
+      yPos += 5;
+      doc.text("Visit us at www.gripsandgears.com", margin, yPos);
 
-      // Add page border
-      doc.setDrawColor(200, 200, 200);
-      doc.rect(15, 15, 180, 267);
+      // Page border
+      doc.setDrawColor(180, 180, 180);
+      doc.setLineWidth(0.5);
+      doc.rect(10, 10, pageWidth - 20, doc.internal.pageSize.height - 20);
 
-      // Save the PDF
-      doc.save(
-        `Grips_Gears_Invoice_${order.transactionId.substring(0, 12)}.pdf`
-      );
+      // Save the PDF with proper filename
+      const fileName = `Grips_Gears_Invoice_${order.transactionId.substring(
+        0,
+        12
+      )}.pdf`;
+      doc.save(fileName);
     } catch (error) {
       console.error("Error generating PDF:", error);
       alert("Failed to generate PDF invoice. Please try again.");
