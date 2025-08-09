@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaEye, FaDownload, FaShoppingBag } from "react-icons/fa";
+import { FaEye, FaDownload, FaShoppingBag, FaCreditCard } from "react-icons/fa";
 import useAuth from "../../../hooks/useAuth";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import { Helmet } from "react-helmet-async";
@@ -11,6 +11,7 @@ const UserOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [paymentLoading, setPaymentLoading] = useState(null); // Track which order is being paid
 
   useEffect(() => {
     fetchOrders();
@@ -374,6 +375,30 @@ const UserOrders = () => {
     }
   };
 
+  const handleRepayment = async (order) => {
+    try {
+      setPaymentLoading(order.transactionId);
+
+      const repaymentData = {
+        transactionId: order.transactionId,
+        email: user.email,
+      };
+
+      const response = await axiosSecure.post("/payment/repay", repaymentData);
+
+      if (response.data.success && response.data.paymentUrl) {
+        // Redirect to SSL Commerz payment gateway
+        window.location.href = response.data.paymentUrl;
+      } else {
+        throw new Error("Failed to initialize payment");
+      }
+    } catch (error) {
+      console.error("Repayment error:", error);
+      alert("Failed to initialize payment. Please try again.");
+      setPaymentLoading(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -470,6 +495,8 @@ const UserOrders = () => {
                       >
                         <FaEye />
                       </button>
+
+                      {/* Show Download button only for paid orders */}
                       {order.paymentStatus === "paid" && (
                         <button
                           onClick={() => generatePDFInvoice(order)}
@@ -479,6 +506,26 @@ const UserOrders = () => {
                           <FaDownload />
                         </button>
                       )}
+
+                      {/* Show Pay Now button only for pending payment orders */}
+                      {order.paymentStatus === "pending" &&
+                        order.status === "pending" && (
+                          <button
+                            onClick={() => handleRepayment(order)}
+                            disabled={paymentLoading === order.transactionId}
+                            className="btn btn-sm btn-outline btn-accent"
+                            title="Pay Now"
+                          >
+                            {paymentLoading === order.transactionId ? (
+                              <span className="loading loading-spinner loading-xs"></span>
+                            ) : (
+                              <>
+                                <FaCreditCard />
+                                Pay Now
+                              </>
+                            )}
+                          </button>
+                        )}
                     </div>
                   </td>
                 </tr>
@@ -592,7 +639,8 @@ const UserOrders = () => {
             </div>
 
             <div className="modal-action">
-              {selectedOrder.paymentStatus === "paid" && (
+              {/* Show appropriate button based on payment status */}
+              {selectedOrder.paymentStatus === "paid" ? (
                 <button
                   onClick={() => generatePDFInvoice(selectedOrder)}
                   className="btn btn-primary"
@@ -600,6 +648,25 @@ const UserOrders = () => {
                   <FaDownload className="mr-2" />
                   Download PDF Invoice
                 </button>
+              ) : (
+                selectedOrder.paymentStatus === "pending" &&
+                selectedOrder.status === "pending" && (
+                  <button
+                    onClick={() => {
+                      setSelectedOrder(null);
+                      handleRepayment(selectedOrder);
+                    }}
+                    disabled={paymentLoading === selectedOrder.transactionId}
+                    className="btn btn-accent"
+                  >
+                    {paymentLoading === selectedOrder.transactionId ? (
+                      <span className="loading loading-spinner loading-xs mr-2"></span>
+                    ) : (
+                      <FaCreditCard className="mr-2" />
+                    )}
+                    Pay Now
+                  </button>
+                )
               )}
               <button onClick={() => setSelectedOrder(null)} className="btn">
                 Close
